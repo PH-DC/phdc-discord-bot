@@ -132,12 +132,26 @@ def random_joke():
   joke = data["joke"]
   return joke
 
-#Function which return a github url
+#Setting up fuction for github search
 def github_search_user(user_name_to_search):
   response = urllib.request.urlopen("https://api.github.com/users/" + user_name_to_search )
   data = json.loads(response.read())
+  #All data from github json
   git_url = data["html_url"]
-  return git_url
+  github_repos = data["repos_url"]
+  user_name = data["login"]
+  github_avatar_url = data["avatar_url"]
+  github_follower = data["followers"]
+  github_bio = data["bio"]
+  github_following = data["following"]
+
+  repo_state = urllib.request.urlopen(github_repos)
+  repo_data = json.loads(repo_state.read())
+  repo_length = len(repo_data)
+
+
+  github_resource = [github_url,repo_length,user_name,github_avatar_url,github_follower,github_bio,github_following]
+  return github_resource
 
 #Creating Login message
 @client.event
@@ -255,7 +269,20 @@ async def on_message(message):
       user_to_be_searched = msg.split(" ",3)[3]
       git_result = github_search_user(user_to_be_searched)
       await message.channel.send(">>> " + git_result[0])
-
+      github_url = git_result[0]
+      github_repo_size = str(git_result[1])
+      github_user_name = str(git_result[2])
+      github_avatar_url = git_result[3]
+      github_followers = str(git_result[4])
+      github_dis = str(git_result[5])
+      github_following = str(git_result[6])
+      # Embed for discord
+      embed=discord.Embed(description=github_dis, color=0xff1095 )
+      embed.set_author(name = github_user_name, url=github_url, icon_url = github_avatar_url)
+      embed.add_field(name = "Repository", value = github_repo_size,inline = False)
+      embed.add_field(name = "Followers", value=github_followers,inline = True)
+      embed.add_field(name = "Following", value=github_following,inline = True)
+      
 # Condition to get latest events from microsoft
   if msg.startswith("!pdc get-microsoft-eve"):
 
@@ -412,7 +439,6 @@ async def on_message(message):
 
     else:
       await message.channel.send("Couldn't fetch it. Try Again !")
-
     
 #Keep Alive
 keep_alive()
